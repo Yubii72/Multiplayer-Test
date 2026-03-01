@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplayer Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="screen active">
+        <div class="login-container">
+            <h1>Multiplayer Game</h1>
+            <div class="form-group">
+                <input type="text" id="username" placeholder="Enter your username" maxlength="15">
+            </div>
+            <button id="searchBtn">Search for Player</button>
+        </div>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="screen">
+        <div class="loading-container">
+            <img src="assets/loading.gif" alt="Loading" class="loading-gif">
+            <p id="loadingMessage">Waiting for another player...</p>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="gameScreen" class="screen">
+        <div class="game-info">
+            <span id="playerInfo">You are playing!</span>
+        </div>
+        <div id="gameArea">
+            <div id="myPlayer" class="player">
+                <img src="assets/character.gif" alt="Your Character" class="character">
+                <span class="player-name" id="myPlayerName"></span>
+            </div>
+            <div id="opponentPlayer" class="player">
+                <img src="assets/character.gif" alt="Opponent Character" class="character">
+                <span class="player-name" id="opponentPlayerName"></span>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        // DOM Elements
+        const loginScreen = document.getElementById("loginScreen");
+        const loadingScreen = document.getElementById("loadingScreen");
+        const gameScreen = document.getElementById("gameScreen");
+        const usernameInput = document.getElementById("username");
+        const searchBtn = document.getElementById("searchBtn");
+        const loadingMessage = document.getElementById("loadingMessage");
+        const gameArea = document.getElementById("gameArea");
+        const myPlayer = document.getElementById("myPlayer");
+        const opponentPlayer = document.getElementById("opponentPlayer");
+        const myPlayerName = document.getElementById("myPlayerName");
+        const opponentPlayerName = document.getElementById("opponentPlayerName");
+        const playerInfo = document.getElementById("playerInfo");
+
+        let myId = null;
+        let myUsername = "";
+        let isFirstPlayer = false;
+        const moveSpeed = 10;
+        const keys = {};
+
+        // Show/hide screens
+        function showScreen(screen) {
+            document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+            screen.classList.add("active");
+        }
+
+        // Search for player button click
+        searchBtn.addEventListener("click", () => {
+            const username = usernameInput.value.trim();
+            if (username) {
+                myUsername = username;
+                showScreen(loadingScreen);
+                socket.emit("searchPlayer", username);
+            } else {
+                alert("Please enter a username!");
+            }
+        });
+
+        // Socket events
+        socket.on("connect", () => {
+            myId = socket.id;
+        });
+
+        socket.on("waiting", (data) => {
+            loadingMessage.textContent = data.message;
+        });
+
+        socket.on("gameStart", (data) => {
+            isFirstPlayer = data.isFirstPlayer;
+            
+            // Set player names
+            myPlayerName.textContent = data.player.username;
+            opponentPlayerName.textContent = data.opponent.username;
+            
+            // Position players
+            if (isFirstPlayer) {
+                myPlayer.style.left = "100px";
+                myPlayer.style.top = "300px";
+                opponentPlayer.style.left = "700px";
+                opponentPlayer.style.top = "300px";
+            } else {
+                myPlayer.style.left = "700px";
+                myPlayer.style.top = "300px";
+                opponentPlayer.style.left = "100px";
+                opponentPlayer.style.top = "300px";
+            }
+
+            playerInfo.textContent = `You are ${data.player.username} vs ${data.opponent.username}`;
+            showScreen(gameScreen);
+        });
+
+        socket.on("playerMoved", (data) => {
+            if (data.id !== myId) {
+                opponentPlayer.style.left = data.x + "px";
+                opponentPlayer.style.top = data.y + "px";
+            }
+        });
+
+        socket.on("playerDisconnected", (data) => {
+            alert(data.message);
+            resetGame();
+        });
+
+        // Keyboard controls
+        document.addEventListener("keydown", (e) => {
+            keys[e.key] = true;
+        });
+
+        document.addEventListener("keyup", (e) => {
+            keys[e.key] = false;
+        });
+
+        // Game loop for movement
+        function gameLoop() {
+            if (gameScreen.classList.contains("active")) {
+                let moved = false;
+                let x = parseInt(myPlayer.style.left) || 100;
+                let y = parseInt(myPlayer.style.top) || 300;
+
+                if (keys["ArrowUp"] || keys["w"]) {
+                    y -= moveSpeed;
+                    moved = true;
+                }
+                if (keys["ArrowDown"] || keys["s"]) {
+                    y += moveSpeed;
+                    moved = true;
+                }
+                if (keys["ArrowLeft"] || keys["a"]) {
+                    x -= moveSpeed;
+                    moved = true;
+                }
+                if (keys["ArrowRight"] || keys["d"]) {
+                    x += moveSpeed;
+                    moved = true;
+                }
+
+                // Boundary checks
+                x = Math.max(0, Math.min(x, gameArea.clientWidth - 60));
+                y = Math.max(0, Math.min(y, gameArea.clientHeight - 80));
+
+                if (moved) {
+                    myPlayer.style.left = x + "px";
+                    myPlayer.style.top = y + "px";
+                    socket.emit("playerMove", { x, y });
+                }
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        function resetGame() {
+            showScreen(loginScreen);
+            usernameInput.value = "";
+            myPlayer.style.left = "100px";
+            myPlayer.style.top = "300px";
+            opponentPlayer.style.left = "700px";
+            opponentPlayer.style.top = "300px";
+        }
+
+        // Start game loop
+        gameLoop();
+    </script>
+</body>
+</html>

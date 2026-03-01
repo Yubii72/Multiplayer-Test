@@ -1,0 +1,229 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+/* Screen Management */
+.screen {
+    display: none;
+    width: 100%;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.screen.active {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Login Screen */
+.login-container {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 40px 60px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.login-container h1 {
+    color: #fff;
+    margin-bottom: 30px;
+    font-size: 2.5rem;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+#username {
+    width: 280px;
+    padding: 15px 20px;
+    font-size: 1.1rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+#username::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+#username:focus {
+    border-color: #4ecca3;
+    box-shadow: 0 0 20px rgba(78, 204, 163, 0.3);
+}
+
+#searchBtn {
+    width: 280px;
+    padding: 15px 30px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #1a1a2e;
+    background: linear-gradient(135deg, #4ecca3 0%, #45b393 100%);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+#searchBtn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(78, 204, 163, 0.4);
+}
+
+#searchBtn:active {
+    transform: translateY(0);
+}
+
+/* Loading Screen */
+.loading-container {
+    text-align: center;
+}
+
+.loading-gif {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+}
+
+#loadingMessage {
+    color: #fff;
+    font-size: 1.5rem;
+    margin-top: 30px;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Game Screen */
+#gameScreen {
+    flex-direction: column;
+    background: #0a0a1a;
+}
+
+.game-info {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.1);
+    padding: 10px 30px;
+    border-radius: 25px;
+    backdrop-filter: blur(10px);
+    z-index: 100;
+}
+
+#playerInfo {
+    color: #4ecca3;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+#gameArea {
+    width: 100%;
+    height: 100vh;
+    position: relative;
+    background: 
+        linear-gradient(rgba(10, 10, 26, 0.9), rgba(10, 10, 26, 0.9)),
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 49px,
+            rgba(78, 204, 163, 0.1) 49px,
+            rgba(78, 204, 163, 0.1) 50px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 49px,
+            rgba(78, 204, 163, 0.1) 49px,
+            rgba(78, 204, 163, 0.1) 50px
+        );
+    background-size: 100% 100%, 50px 50px, 50px 50px;
+}
+
+.player {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: left 0.05s linear, top 0.05s linear;
+}
+
+.character {
+    width: 60px;
+    height: 70px;
+    image-rendering: pixelated;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+}
+
+.player-name {
+    color: #fff;
+    font-size: 0.9rem;
+    margin-top: 5px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.5);
+    padding: 2px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+
+#myPlayer .character {
+    border: 3px solid #4ecca3;
+    border-radius: 5px;
+}
+
+#opponentPlayer .character {
+    border: 3px solid #e94560;
+    border-radius: 5px;
+}
+
+#myPlayer .player-name {
+    color: #4ecca3;
+}
+
+#opponentPlayer .player-name {
+    color: #e94560;
+}
+
+/* Controls hint */
+.controls-hint {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.9rem;
+}
