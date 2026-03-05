@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+50932<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -66,6 +66,18 @@
         let isFirstPlayer = false;
         const moveSpeed = 10;
         const keys = {};
+        
+        // Throttle settings - limit network updates to prevent choppiness
+        const UPDATE_INTERVAL = 33; // ~30 updates per second (33ms)
+        let lastUpdateTime = 0;
+        
+        // Interpolation settings for smooth opponent movement
+        const OPPONENT_UPDATE_RATE = 33; // ms between opponent position updates
+        let opponentTargetX = 0;
+        let opponentTargetY = 0;
+        let opponentCurrentX = 0;
+        let opponentCurrentY = 0;
+        let lastOpponentUpdate = 0;
 
         // Show/hide screens
         function showScreen(screen) {
@@ -140,7 +152,7 @@
         });
 
         // Game loop for movement
-        function gameLoop() {
+        function gameLoop(timestamp) {
             if (gameScreen.classList.contains("active")) {
                 let moved = false;
                 let x = parseInt(myPlayer.style.left) || 100;
@@ -170,7 +182,26 @@
                 if (moved) {
                     myPlayer.style.left = x + "px";
                     myPlayer.style.top = y + "px";
-                    socket.emit("playerMove", { x, y });
+                    
+                    // Throttle network updates - only send every 33ms
+                    if (timestamp - lastUpdateTime > UPDATE_INTERVAL) {
+                        socket.emit("playerMove", { x, y });
+                        lastUpdateTime = timestamp;
+                    }
+                }
+                
+                // Smooth interpolation for opponent movement
+                const currentOpponentX = parseInt(opponentPlayer.style.left) || 0;
+                const currentOpponentY = parseInt(opponentPlayer.style.top) || 0;
+                
+                // Lerp towards target position (smooth transition)
+                if (opponentTargetX > 0 || opponentTargetY > 0) {
+                    const lerpSpeed = 0.2; // Adjust for smoothness (0.1 = slow, 0.5 = fast)
+                    const newX = currentOpponentX + (opponentTargetX - currentOpponentX) * lerpSpeed;
+                    const newY = currentOpponentY + (opponentTargetY - currentOpponentY) * lerpSpeed;
+                    
+                    opponentPlayer.style.left = newX + "px";
+                    opponentPlayer.style.top = newY + "px";
                 }
             }
             requestAnimationFrame(gameLoop);
